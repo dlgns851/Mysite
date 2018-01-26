@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.javaex.dao.BoardDao;
+import com.javaex.util.Paging;
 import com.javaex.util.WebUtil;
 import com.javaex.vo.BoardVo;
 import com.javaex.vo.UserVo;
@@ -41,13 +42,40 @@ public class BoardServlet extends HttpServlet {
 		
 		if(actionName.equals("list")) {
 			
+			List<BoardVo> list;
+			BoardDao dao = new BoardDao();
+			
+			String searchWord=request.getParameter("searchword");     
+			if(searchWord!=null) {									//검색시 if문
+				list = dao.getListAll(searchWord);
+				request.setAttribute("list", list);
+				WebUtil.forward(request, response, "/WEB-INF/views/board/list.jsp");
+			}
+			
+			///페이징시작//
+			Paging paging=new Paging();
+			
+			int countRow=dao.countRow();//전체 글수 가져오기
+			paging.setWriting_Count(countRow);
+			String curPageStr= request.getParameter("page"); //현재 페이지 번호 가져오기
+			
+			// 전체 글수 가져오는 다오만들고 페이징 객체에 넣어주는거 까지 했음 다음에 할건 페이징 이용해서 겟리스트올 쿼리문 조작!
+			int curPage;
+			if(curPageStr==null) {
+				paging.setCur_Page(1);    //기본값 1
+			}
+			else {
+				curPage=Integer.parseInt(curPageStr);
+				paging.setCur_Page(curPage);
+			}
+				
+			list=dao.getListAll(paging);
+			request.setAttribute("list", list);
+			request.setAttribute("paging", paging);
+			WebUtil.forward(request, response, "/WEB-INF/views/board/list.jsp");
+
 			//board 리스트를 받아와서 list.jsp 포워드 
 			
-			BoardDao dao = new BoardDao();
-			List<BoardVo> list = dao.getListAll();
-			request.setAttribute("list", list);
-			WebUtil.forward(request, response, "/WEB-INF/views/board/list.jsp");
-				
 		}
 		
 		else if(actionName.equals("writeform")) {			

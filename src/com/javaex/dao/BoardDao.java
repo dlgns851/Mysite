@@ -7,7 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import com.javaex.conn.DbConnect;
+import com.javaex.util.Paging;
 import com.javaex.vo.BoardUserVo;
 import com.javaex.vo.BoardVo;
 import com.javaex.vo.UserVo;
@@ -77,7 +80,7 @@ public class BoardDao {
 	}
 	
 	
-	/*public List<BoardVo> getListAll() {
+	public List<BoardVo> getListAll(String searchWord) {
 		Connection con = new DbConnect().getCon();
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -88,8 +91,14 @@ public class BoardDao {
 		try {
 
 			// 3. SQL문 준비 / 바인딩 / 실행
-			String query = "select no,title,count,writedate,content from board";
+		
+			String query = "select bo.no,bo.title,us.name,bo.hit,bo.reg_date,bo.content,bo.user_no\r\n" + 
+						   "from board bo,users us\r\n" + 
+						   "where bo.user_no = us.no \r\n" +
+						   "and bo.title like ? \r\n" +
+						   "order by bo.reg_date desc";
 			pstmt = con.prepareStatement(query);
+			pstmt.setString(1, "%"+searchWord+"%");
 			rs = pstmt.executeQuery();
 
 			// 4.결과처리
@@ -101,6 +110,8 @@ public class BoardDao {
 				vo.setCount(rs.getInt(4));
 				vo.setDate(rs.getString(5));
 				vo.setContent(rs.getString(6));
+				vo.setUserNo(rs.getInt(7));
+			
 				
 
 				boardList.add(vo);
@@ -130,8 +141,82 @@ public class BoardDao {
 
 		}
 		return boardList;
+	}
+	
+	public List<BoardVo> getListAll(Paging paging) {
+		Connection con = new DbConnect().getCon();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		BoardVo vo = null;
+
+		List<BoardVo> boardList = new ArrayList<BoardVo>();
+
+		try {
+
+			// 3. SQL문 준비 / 바인딩 / 실행
 		
-	}*/
+			String query = "select  no,title,name,hit,reg_date,content,user_no\r\n" + 
+					"from\r\n" + 
+					"(\r\n" + 
+					"select rownum rnum,no,title,name,hit,reg_date,content,user_no \r\n" + 
+					"from(\r\n" + 
+					"select bo.no,bo.title,us.name,bo.hit,bo.reg_date,bo.content,bo.user_no\r\n" + 
+					"from BOARD bo, users us\r\n" + 
+					"where bo.user_no=us.no\r\n" + 
+					"order by reg_date) )\r\n" + 
+					"where rnum >=? and rnum <= ?";
+			
+		
+			pstmt = con.prepareStatement(query);
+			pstmt.setInt(1, paging.getWriting_Start()); //
+			pstmt.setInt(2, paging.getWriting_End());
+			//pstmt.setString(1, "%"+searchWord+"%");
+			rs = pstmt.executeQuery();
+
+			// 4.결과처리
+			while (rs.next()) {
+				vo = new BoardVo();
+				vo.setNo(rs.getInt(1));
+				vo.setTitle(rs.getString(2));
+				vo.setName(rs.getString(3));
+				vo.setCount(rs.getInt(4));
+				vo.setDate(rs.getString(5));
+				vo.setContent(rs.getString(6));
+				vo.setUserNo(rs.getInt(7));
+			
+				
+
+				boardList.add(vo);
+
+				// authorList.toString();
+				// System.out.println(authorId+" "+authorName+" "+authorDesc);
+			}
+
+		} catch (SQLException e) {
+			System.out.println("error:" + e);
+		} finally {
+
+			// 5. 자원정리
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (pstmt != null) {
+					pstmt.close();
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException e) {
+				System.out.println("error:" + e);
+			}
+
+		}
+		return boardList;
+	}
+	
+	
+	
 	
 	public int getUserNo(int no) {
 		Connection con = new DbConnect().getCon();
@@ -353,6 +438,56 @@ public class BoardDao {
 			}
 
 		}
+	}
+	
+	public int countRow() {
+		Connection con = new DbConnect().getCon();
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		BoardVo vo = null;
+		int countRow=0;
+
+		try {
+
+			// 3. SQL문 준비 / 바인딩 / 실행
+			String query = "select count(*)\r\n" + 
+					" from board";
+			pstmt = con.prepareStatement(query);
+		
+			rs = pstmt.executeQuery();
+			
+			
+
+			// 4.결과처리
+			while (rs.next()) {
+				countRow=rs.getInt(1);
+				
+
+				// authorList.toString();
+				// System.out.println(authorId+" "+authorName+" "+authorDesc);
+			}
+
+		} catch (SQLException e) {
+			System.out.println("error:" + e);
+		} finally {
+
+			// 5. 자원정리
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (pstmt != null) {
+					pstmt.close();
+				}
+				if (con != null) {
+					con.close();
+				}
+			} catch (SQLException e) {
+				System.out.println("error:" + e);
+			}
+
+		}
+		return countRow;
 	}
 	
 	public void insert(BoardVo boardVo,int userVo) {

@@ -19,8 +19,8 @@
 		
 		<div id="content">
 			<div id="board">
-				<form id="search_form" action="" method="post">
-					<input type="text" id="kwd" name="kwd" value="">
+				<form id="search_form" action="board?a=list" method="post">
+					<input type="text" id="kwd" name="searchword" value="">
 					<input type="submit" value="찾기">
 				</form>
 				<table class="tbl-ex">
@@ -55,13 +55,31 @@
 				</table>
 				<div class="pager">
 					<ul>
-						<li><a href="">◀</a></li>
-						<li><a href="">1</a></li>
-						<li><a href="">2</a></li>
+						<c:if test="${paging.getCur_Page()!=1}">
+						<li><a href="board?a=list&page=${paging.getCur_Page()-1}">◀</a></li>
+						</c:if>
+						
+						 <c:forEach var="i" begin="${paging.getPage_Start()}" end="${paging.getPage_End()}">
+      <%-- 	<c:if test="${i==paging.getCur_Page()}">
+      		<li class="selected"><a href="board?a=list&page=${i}"> ${i} </a> </li>
+      	</c:if>
+       <li><a href="board?a=list&page=${i}"> ${i} </a> </li> --%>
+       
+       <c:choose>
+		<c:when test="${i==paging.getCur_Page()}"><li class="selected">
+		<a href="board?a=list&page=${i}"> ${i} </a> </li>		 </c:when>
+		
+		<c:otherwise><li><a href="board?a=list&page=${i}"> ${i} </a> </li> </c:otherwise>
+</c:choose>
+   </c:forEach> 
+						
+						<!-- <li><a href="board?a=list&page=1">1</a></li>
+						<li><a href="board?a=list&page=2">2</a></li>
 						<li class="selected">3</li>
-						<li><a href="">4</a></li>
-						<li>5</li>
-						<li><a href="">▶</a></li>
+						<li><a href="board?a=list&page=4">4</a></li>						
+						<li>5</li> -->
+						
+						<li><a href="board?a=list&page=${paging.getCur_Page()+1}">▶</a></li>
 					</ul>
 				</div>			
 				
